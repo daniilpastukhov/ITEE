@@ -19,9 +19,9 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stdbool.h"
 #include "main.h"
 #include "cmsis_os.h"
-#include <stdbool.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -44,10 +44,17 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
-osThreadId ProtectionHandle;
+osThreadId motor0TaskHandle;
+osThreadId motor1TaskHandle;
+osThreadId ADCTaskHandle;
+osThreadId controlTaskHandle;
+osThreadId backupTask0Handle;
+osThreadId backupTask1Handle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -56,8 +63,14 @@ osThreadId ProtectionHandle;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_ADC1_Init(void);
 void StartDefaultTask(void const * argument);
-void StartTask02(void const * argument);
+void motor0Loop(void const * argument);
+void motor1Loop(void const * argument);
+void ADCLoop(void const * argument);
+void controlLoop(void const * argument);
+void backupLoop0(void const * argument);
+void backupLoop1(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -67,27 +80,6 @@ void StartTask02(void const * argument);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
-#define AIN1_PORT	GPIOA
-#define AIN1_PIN	GPIO_PIN_0
-
-#define AIN2_PORT	GPIOA
-#define AIN2_PIN	GPIO_PIN_1
-
-#define PWMA_PORT	GPIOA
-#define PWMA_PIN	GPIO_PIN_5
-
-#define BIN1_PORT	GPIOA
-#define BIN1_PIN	GPIO_PIN_4
-
-#define BIN2_PORT	GPIOA
-#define BIN2_PIN	GPIO_PIN_6
-
-#define PWMB_PORT	GPIOA
-#define PWMB_PIN	GPIO_PIN_7
-
-#define ERROR_LED_PORT	GPIOA
-#define ERROR_LED_PIN	GPIO_PIN_5
-
 
 /**
   * @brief  The application entry point.
@@ -118,6 +110,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -143,9 +136,29 @@ int main(void)
   osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
-  /* definition and creation of Protection */
-  osThreadDef(Protection, StartTask02, osPriorityIdle, 0, 128);
-  ProtectionHandle = osThreadCreate(osThread(Protection), NULL);
+  /* definition and creation of motor0Task */
+  osThreadDef(motor0Task, motor0Loop, osPriorityIdle, 0, 128);
+  motor0TaskHandle = osThreadCreate(osThread(motor0Task), NULL);
+
+  /* definition and creation of motor1Task */
+  osThreadDef(motor1Task, motor1Loop, osPriorityIdle, 0, 128);
+  motor1TaskHandle = osThreadCreate(osThread(motor1Task), NULL);
+
+  /* definition and creation of ADCTask */
+  osThreadDef(ADCTask, ADCLoop, osPriorityIdle, 0, 128);
+  ADCTaskHandle = osThreadCreate(osThread(ADCTask), NULL);
+
+  /* definition and creation of controlTask */
+  osThreadDef(controlTask, controlLoop, osPriorityIdle, 0, 128);
+  controlTaskHandle = osThreadCreate(osThread(controlTask), NULL);
+
+  /* definition and creation of backupTask0 */
+  osThreadDef(backupTask0, backupLoop0, osPriorityIdle, 0, 128);
+  backupTask0Handle = osThreadCreate(osThread(backupTask0), NULL);
+
+  /* definition and creation of backupTask1 */
+  osThreadDef(backupTask1, backupLoop1, osPriorityIdle, 0, 128);
+  backupTask1Handle = osThreadCreate(osThread(backupTask1), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -203,12 +216,76 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_MultiModeTypeDef multimode = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config 
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure the ADC multi-mode 
+  */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel 
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -262,7 +339,11 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|AIN1_Pin|AIN2_Pin|PWMB_Pin 
+                          |BN1_Pin|BN2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, backupOut1_Pin|backupOut0_Pin|PWMA_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -277,6 +358,34 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : backupIn1_Pin */
+  GPIO_InitStruct.Pin = backupIn1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(backupIn1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : backupIn0_Pin */
+  GPIO_InitStruct.Pin = backupIn0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(backupIn0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : backupOut1_Pin backupOut0_Pin PWMA_Pin */
+  GPIO_InitStruct.Pin = backupOut1_Pin|backupOut0_Pin|PWMA_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : AIN1_Pin AIN2_Pin PWMB_Pin BN1_Pin 
+                           BN2_Pin */
+  GPIO_InitStruct.Pin = AIN1_Pin|AIN2_Pin|PWMB_Pin|BN1_Pin 
+                          |BN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
@@ -290,20 +399,6 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-#define MAX_SPEED 10
-enum State{On,Off};
-enum Dir{Forw,Backw};
-
-State m1State = Off;
-State m2State = Off;
-
-Dir m1Dir = Forw;
-Dir m2Dir = Forw;
-
-int16_t m1Speed = 0;
-int16_t m2Speed = 0;
-bool errorMot = false;
-
 void StartDefaultTask(void const * argument)
 {
 
@@ -311,40 +406,154 @@ void StartDefaultTask(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-	uint16_t i = 0;
-	for(i = 0;i<100;i++){
-		if(m1Speed>MAX_SPEED || m1Speed<0){
-			HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
-			errorMot = true;
-		}
-		else{
-			HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_SET);
-			osDelay(m1Speed);
-			HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_RESET);
-			osDelay(MAX_SPEED-m1Speed);
-			}
-		}
-	m1Speed++;
+    osDelay(1);
   }
   /* USER CODE END 5 */ 
 }
 
-/* USER CODE BEGIN Header_StartTask02 */
+
+
+extern enum State{On,Off};
+extern enum Dir{Forw,Backw};
+
+extern enum State m1State = On;
+extern enum State m2State = Off;
+
+extern enum Dir m1Dir = Forw;
+extern enum Dir m2Dir = Forw;
+
+extern int16_t m1Speed = 5;
+extern int16_t m2Speed = 0;
+extern bool errorMot;
+
+
+extern void setCorrectDirM1(void);
+extern void resetDirM1(void);
+extern void setCorrectDirM2(void);
+extern void resetDirM2(void);
+extern void handleSpeedAndDirM1(void);
+extern void handleSpeedAndDirM2(void);
+
+
+/* USER CODE BEGIN Header_motor0Loop */
 /**
-* @brief Function implementing the Protection thread.
+* @brief Function implementing the motor0Task thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void const * argument)
+/* USER CODE END Header_motor0Loop */
+void motor0Loop(void const * argument)
 {
-  /* USER CODE BEGIN StartTask02 */
+  /* USER CODE BEGIN motor0Loop */
+  /* Infinite loop */
+  for(;;)
+  {
+	  if(m1State == On){
+			if(m1Speed>MAX_SPEED || m1Speed<0){
+				HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
+				errorMot = true;
+			}
+			else{
+				HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_SET);
+				setCorrectDirM1();
+				osDelay(m1Speed);
+				resetDirM1();
+				HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_RESET);
+				osDelay(MAX_SPEED-m1Speed);
+			}
+	  }
+  }
+  /* USER CODE END motor0Loop */
+}
+
+/* USER CODE BEGIN Header_motor1Loop */
+/**
+* @brief Function implementing the motor1Task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_motor1Loop */
+void motor1Loop(void const * argument)
+{
+  /* USER CODE BEGIN motor1Loop */
   /* Infinite loop */
   for(;;)
   {
     osDelay(1);
   }
-  /* USER CODE END StartTask02 */
+  /* USER CODE END motor1Loop */
+}
+
+/* USER CODE BEGIN Header_ADCLoop */
+/**
+* @brief Function implementing the ADCTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_ADCLoop */
+void ADCLoop(void const * argument)
+{
+  /* USER CODE BEGIN ADCLoop */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END ADCLoop */
+}
+
+/* USER CODE BEGIN Header_controlLoop */
+/**
+* @brief Function implementing the controlTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_controlLoop */
+void controlLoop(void const * argument)
+{
+  /* USER CODE BEGIN controlLoop */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END controlLoop */
+}
+
+/* USER CODE BEGIN Header_backupLoop0 */
+/**
+* @brief Function implementing the backupTask0 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_backupLoop0 */
+void backupLoop0(void const * argument)
+{
+  /* USER CODE BEGIN backupLoop0 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END backupLoop0 */
+}
+
+/* USER CODE BEGIN Header_backupLoop1 */
+/**
+* @brief Function implementing the backupTask1 thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_backupLoop1 */
+void backupLoop1(void const * argument)
+{
+  /* USER CODE BEGIN backupLoop1 */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END backupLoop1 */
 }
 
 /**

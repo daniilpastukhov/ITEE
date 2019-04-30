@@ -1,0 +1,6 @@
+motors.c:5:6:setCorrectDirM1	8	static
+motors.c:16:6:resetDirM1	8	static
+motors.c:21:6:setCorrectDirM2	8	static
+motors.c:32:6:resetDirM2	8	static
+motors.c:37:6:handleSpeedAndDirM1	8	static
+motors.c:52:6:handleSpeedAndDirM2	8	static
