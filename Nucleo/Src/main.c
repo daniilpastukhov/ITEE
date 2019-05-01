@@ -434,16 +434,16 @@ void StartDefaultTask(void const * argument)
 #define ERROR_LED_PORT	GPIOA
 #define ERROR_LED_PIN	GPIO_PIN_5
 
-#define MAX_SPEED 10
+#define MAX_SPEED 20
 #endif
 
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = On;
-extern enum State m2State = On;
+extern enum State m1State = Off;
+extern enum State m2State = Off;
 
-extern enum Dir m1Dir = Backw;
+extern enum Dir m1Dir = Forw;
 extern enum Dir m2Dir = Forw;
 
 extern int16_t m1Speed = 5;
@@ -469,6 +469,8 @@ extern void handleSpeedAndDirM2(void);
 /* USER CODE END Header_motor0Loop */
 void motor0Loop(void const * argument)
 {
+
+	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_SET);
   /* USER CODE BEGIN motor0Loop */
   /* Infinite loop */
   for(;;)
@@ -531,13 +533,82 @@ void motor1Loop(void const * argument)
 /* USER CODE END Header_ADCLoop */
 void ADCLoop(void const * argument)
 {
-  /* USER CODE BEGIN ADCLoop */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END ADCLoop */
+	volatile uint16_t adcl1 = adc1, adcl2 = adc2, adcl3 = adc3, adcl4 = adc4, adcl5 = adc5;
+
+	while (1)
+	{
+	config(1);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl5 = HAL_ADC_GetValue(&hadc1);
+	adcl5 = adcl5 / 4;
+
+	config(6);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl2 = HAL_ADC_GetValue(&hadc1);
+	adcl2 = adcl2 / 4;
+
+	config(7);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl1 = HAL_ADC_GetValue(&hadc1);
+	adcl1 = adcl1 / 4;
+
+	config(8);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl4 = HAL_ADC_GetValue(&hadc1);
+	adcl4 = adcl4 / 4;
+
+	config(9);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl3 = HAL_ADC_GetValue(&hadc1);
+	adcl3 = adcl3 / 4;
+
+	osDelay(2);
+
+	adc1 = adcl1;
+	adc2 = adcl2;
+	adc3 = adcl3;
+	adc4 = adcl4;
+	adc5 = adcl5;
+
+	osDelay(10);
+	}
+}
+
+void config(int a) {
+ADC_ChannelConfTypeDef sTmp = {0};
+switch(a) {
+case 1:
+sTmp.Channel = ADC_CHANNEL_1;
+break;
+case 6:
+sTmp.Channel = ADC_CHANNEL_6;
+break;
+case 7:
+sTmp.Channel = ADC_CHANNEL_7;
+break;
+case 8:
+sTmp.Channel = ADC_CHANNEL_8;
+break;
+case 9:
+sTmp.Channel = ADC_CHANNEL_9;
+break;
+default:
+sTmp.Channel = ADC_CHANNEL_1;
+}
+sTmp.Rank = ADC_REGULAR_RANK_1;
+sTmp.SingleDiff = ADC_SINGLE_ENDED;
+sTmp.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+sTmp.OffsetNumber = ADC_OFFSET_NONE;
+sTmp.Offset = 0;
+if (HAL_ADC_ConfigChannel(&hadc1, &sTmp) != HAL_OK)
+{
+Error_Handler();
+}
 }
 
 /* USER CODE BEGIN Header_controlLoop */

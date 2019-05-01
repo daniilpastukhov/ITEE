@@ -25,7 +25,7 @@
 #define ERROR_LED_PORT	GPIOA
 #define ERROR_LED_PIN	GPIO_PIN_5
 
-#define MAX_SPEED 10
+#define MAX_SPEED 20
 #endif
 
 enum State{On,Off};
