@@ -19,9 +19,10 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stdbool.h"
 #include "main.h"
 #include "cmsis_os.h"
+#include "stdbool.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -216,9 +217,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -246,7 +246,7 @@ static void MX_ADC1_Init(void)
   /** Common config 
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -272,7 +272,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Regular Channel 
   */
-  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Channel = ADC_CHANNEL_14;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
@@ -441,13 +441,13 @@ extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
 extern enum State m1State = On;
-extern enum State m2State = Off;
+extern enum State m2State = On;
 
 extern enum Dir m1Dir = Backw;
 extern enum Dir m2Dir = Forw;
 
-extern int16_t m1Speed = 10;
-extern int16_t m2Speed = 0;
+extern int16_t m1Speed = 5;
+extern int16_t m2Speed = 5;
 extern bool errorMot;
 
 
@@ -457,6 +457,7 @@ extern void setCorrectDirM2(void);
 extern void resetDirM2(void);
 extern void handleSpeedAndDirM1(void);
 extern void handleSpeedAndDirM2(void);
+
 
 
 /* USER CODE BEGIN Header_motor0Loop */
@@ -503,7 +504,20 @@ void motor1Loop(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  if(m2State == On){
+		  if(m2Speed>MAX_SPEED || m2Speed<0){
+			  HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
+			  errorMot = true;
+		  }
+		  else{
+			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_SET);
+			  setCorrectDirM2();
+			  osDelay(m2Speed);
+			  resetDirM2();
+			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_RESET);
+			  osDelay(MAX_SPEED-m2Speed);
+		  }
+	  }
   }
   /* USER CODE END motor1Loop */
 }
