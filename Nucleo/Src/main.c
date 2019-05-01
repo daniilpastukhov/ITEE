@@ -411,7 +411,31 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */ 
 }
 
+#ifndef __MOTOR_PINS
+#define __MOTOR_PINS
+#define AIN1_PORT	GPIOA
+#define AIN1_PIN	GPIO_PIN_8
 
+#define AIN2_PORT	GPIOA
+#define AIN2_PIN	GPIO_PIN_9
+
+#define PWMA_PORT	GPIOC
+#define PWMA_PIN	GPIO_PIN_9
+
+#define BIN1_PORT	GPIOA
+#define BIN1_PIN	GPIO_PIN_11
+
+#define BIN2_PORT	GPIOA
+#define BIN2_PIN	GPIO_PIN_12
+
+#define PWMB_PORT	GPIOA
+#define PWMB_PIN	GPIO_PIN_10
+
+#define ERROR_LED_PORT	GPIOA
+#define ERROR_LED_PIN	GPIO_PIN_5
+
+#define MAX_SPEED 10
+#endif
 
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
@@ -419,10 +443,10 @@ extern enum Dir{Forw,Backw};
 extern enum State m1State = On;
 extern enum State m2State = Off;
 
-extern enum Dir m1Dir = Forw;
+extern enum Dir m1Dir = Backw;
 extern enum Dir m2Dir = Forw;
 
-extern int16_t m1Speed = 5;
+extern int16_t m1Speed = 10;
 extern int16_t m2Speed = 0;
 extern bool errorMot;
 

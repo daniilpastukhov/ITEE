@@ -2,6 +2,8 @@
 #ifndef __MOTORS_H
 #define __MOTORS_H
 
+#ifndef __MOTOR_PINS
+#define __MOTOR_PINS
 #define AIN1_PORT	GPIOA
 #define AIN1_PIN	GPIO_PIN_8
 
@@ -24,6 +26,8 @@
 #define ERROR_LED_PIN	GPIO_PIN_5
 
 #define MAX_SPEED 10
+#endif
+
 enum State{On,Off};
 enum Dir{Forw,Backw};
 

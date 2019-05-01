@@ -1,0 +1,11 @@
+main.c:572:6:backupLoop1	8	static
+main.c:469:6:motor0Loop	8	static
+main.c:536:6:controlLoop	8	static
+main.c:554:6:backupLoop0	8	static
+main.c:402:6:StartDefaultTask	8	static
+main.c:500:6:motor1Loop	8	static
+main.c:518:6:ADCLoop	8	static
+main.c:187:6:SystemClock_Config	168	static
+main.c:88:5:main	168	static
+main.c:591:6:HAL_TIM_PeriodElapsedCallback	0	static
+main.c:608:6:Error_Handler	0	static
