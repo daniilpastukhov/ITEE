@@ -21,8 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "stdbool.h"
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,6 +45,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+TIM_HandleTypeDef htim3;
+
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
@@ -65,6 +65,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM3_Init(void);
 void StartDefaultTask(void const * argument);
 void motor0Loop(void const * argument);
 void motor1Loop(void const * argument);
@@ -112,6 +113,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -217,8 +219,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_TIM34;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Tim34ClockSelection = RCC_TIM34CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -285,6 +288,59 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 65535;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
 
 }
 
@@ -411,55 +467,6 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */ 
 }
 
-#ifndef __MOTOR_PINS
-#define __MOTOR_PINS
-#define AIN1_PORT	GPIOA
-#define AIN1_PIN	GPIO_PIN_8
-
-#define AIN2_PORT	GPIOA
-#define AIN2_PIN	GPIO_PIN_9
-
-#define PWMA_PORT	GPIOC
-#define PWMA_PIN	GPIO_PIN_9
-
-#define BIN1_PORT	GPIOA
-#define BIN1_PIN	GPIO_PIN_11
-
-#define BIN2_PORT	GPIOA
-#define BIN2_PIN	GPIO_PIN_12
-
-#define PWMB_PORT	GPIOA
-#define PWMB_PIN	GPIO_PIN_10
-
-#define ERROR_LED_PORT	GPIOA
-#define ERROR_LED_PIN	GPIO_PIN_5
-
-#define MAX_SPEED 20
-#endif
-
-extern enum State{On,Off};
-extern enum Dir{Forw,Backw};
-
-extern enum State m1State = Off;
-extern enum State m2State = Off;
-
-extern enum Dir m1Dir = Forw;
-extern enum Dir m2Dir = Forw;
-
-extern int16_t m1Speed = 4;
-extern int16_t m2Speed = 4;
-extern bool errorMot;
-
-
-extern void setCorrectDirM1(void);
-extern void resetDirM1(void);
-extern void setCorrectDirM2(void);
-extern void resetDirM2(void);
-extern void handleSpeedAndDirM1(void);
-extern void handleSpeedAndDirM2(void);
-
-
-
 /* USER CODE BEGIN Header_motor0Loop */
 /**
 * @brief Function implementing the motor0Task thread.
@@ -469,8 +476,6 @@ extern void handleSpeedAndDirM2(void);
 /* USER CODE END Header_motor0Loop */
 void motor0Loop(void const * argument)
 {
-
-	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_SET);
   /* USER CODE BEGIN motor0Loop */
   /* Infinite loop */
   for(;;)
@@ -534,82 +539,13 @@ void motor1Loop(void const * argument)
 /* USER CODE END Header_ADCLoop */
 void ADCLoop(void const * argument)
 {
-	volatile uint16_t adcl1 = adc1, adcl2 = adc2, adcl3 = adc3, adcl4 = adc4, adcl5 = adc5;
-
-	while (1)
-	{
-	config(1);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl5 = HAL_ADC_GetValue(&hadc1);
-	adcl5 = adcl5 / 4;
-
-	config(6);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl2 = HAL_ADC_GetValue(&hadc1);
-	adcl2 = adcl2 / 4;
-
-	config(7);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl1 = HAL_ADC_GetValue(&hadc1);
-	adcl1 = adcl1 / 4;
-
-	config(8);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl4 = HAL_ADC_GetValue(&hadc1);
-	adcl4 = adcl4 / 4;
-
-	config(9);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl3 = HAL_ADC_GetValue(&hadc1);
-	adcl3 = adcl3 / 4;
-
-	osDelay(2);
-
-	adc1 = adcl1;
-	adc2 = adcl2;
-	adc3 = adcl3;
-	adc4 = adcl4;
-	adc5 = adcl5;
-
-	osDelay(10);
-	}
-}
-
-void config(int a) {
-ADC_ChannelConfTypeDef sTmp = {0};
-switch(a) {
-case 1:
-sTmp.Channel = ADC_CHANNEL_1;
-break;
-case 6:
-sTmp.Channel = ADC_CHANNEL_6;
-break;
-case 7:
-sTmp.Channel = ADC_CHANNEL_7;
-break;
-case 8:
-sTmp.Channel = ADC_CHANNEL_8;
-break;
-case 9:
-sTmp.Channel = ADC_CHANNEL_9;
-break;
-default:
-sTmp.Channel = ADC_CHANNEL_1;
-}
-sTmp.Rank = ADC_REGULAR_RANK_1;
-sTmp.SingleDiff = ADC_SINGLE_ENDED;
-sTmp.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-sTmp.OffsetNumber = ADC_OFFSET_NONE;
-sTmp.Offset = 0;
-if (HAL_ADC_ConfigChannel(&hadc1, &sTmp) != HAL_OK)
-{
-Error_Handler();
-}
+  /* USER CODE BEGIN ADCLoop */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END ADCLoop */
 }
 
 /* USER CODE BEGIN Header_controlLoop */
@@ -619,11 +555,9 @@ Error_Handler();
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
-#define CONTROL_HYST			10
-
 void controlLoop(void const * argument)
 {
-	/* USER CODE BEGIN controlLoop */
+  /* USER CODE BEGIN controlLoop */
 	/* Infinite loop */
 
 	m1State = On;
@@ -631,52 +565,45 @@ void controlLoop(void const * argument)
 	m1Speed = 0;
 	m2Speed = 0;
 
-	goAhead();
-	osDelay(5000);
-	turnLeft();
-	osDelay(3000);
-	turnRight();
-	osDelay(3000);
-
+//	goAhead();
+//	osDelay(5000);
+//	turnLeft();
+//	osDelay(3000);
+//	turnRight();
+//	osDelay(3000);
 
 	for(;;)
 	{
 	int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
 
-	if (middle + CONTROL_HYST < 2000) {
-		turnLeft();
-		}
-		else
-			if (middle - CONTROL_HYST > 2000) {
-				turnRight();
-				}
-				else {
-					goAhead();
-					}
-	osDelay(140);
+//	int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
+
+	if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
+		m1State = Off;
+		m2State = Off;
 	}
-	/* USER CODE END controlLoop */   /* USER CODE END controlLoop */
-}
+	else{
+		m1State = On;
+		m2State = On;
 
-void changeSpeed(int leftSpeed, int rightSpeed) {
-if (leftSpeed > m1Speed) m1Speed++;
-else if (leftSpeed < m1Speed) m1Speed--;
-if (rightSpeed > m2Speed) m2Speed++;
-else if (rightSpeed < m2Speed) m2Speed--;
-}
+		if (middle - CONTROL_HYST > 2000) {
+			turnLeft();
 
-void goAhead() {
-changeSpeed(6,6);
-}
+		}
+			else
+				if (middle + CONTROL_HYST < 2000) {
+					turnRight();
 
-void turnLeft() {
-changeSpeed(4, 6);
-}
+					}
+					else {
 
-void turnRight() {
-changeSpeed(6, 4);
+						goAhead();
+						}
+		osDelay(50);
+		}
+	}
+  /* USER CODE END controlLoop */
 }
-
 
 /* USER CODE BEGIN Header_backupLoop0 */
 /**
