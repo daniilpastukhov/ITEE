@@ -21,6 +21,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "stdbool.h"
+
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -467,6 +469,54 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */ 
 }
 
+#ifndef __MOTOR_PINS
+#define __MOTOR_PINS
+#define AIN1_PORT	GPIOA
+#define AIN1_PIN	GPIO_PIN_8
+
+#define AIN2_PORT	GPIOA
+#define AIN2_PIN	GPIO_PIN_9
+
+#define PWMA_PORT	GPIOC
+#define PWMA_PIN	GPIO_PIN_9
+
+#define BIN1_PORT	GPIOA
+#define BIN1_PIN	GPIO_PIN_11
+
+#define BIN2_PORT	GPIOA
+#define BIN2_PIN	GPIO_PIN_12
+
+#define PWMB_PORT	GPIOA
+#define PWMB_PIN	GPIO_PIN_10
+
+#define ERROR_LED_PORT	GPIOA
+#define ERROR_LED_PIN	GPIO_PIN_5
+
+#define MAX_SPEED 20
+#endif
+
+extern enum State{On,Off};
+extern enum Dir{Forw,Backw};
+
+extern enum State m1State = On;
+extern enum State m2State = On;
+
+extern enum Dir m1Dir = Forw;
+extern enum Dir m2Dir = Forw;
+
+extern int16_t m1Speed = 4;
+extern int16_t m2Speed = 4;
+extern bool errorMot;
+
+
+extern void setCorrectDirM1(void);
+extern void resetDirM1(void);
+extern void setCorrectDirM2(void);
+extern void resetDirM2(void);
+extern void handleSpeedAndDirM1(void);
+extern void handleSpeedAndDirM2(void);
+
+
 /* USER CODE BEGIN Header_motor0Loop */
 /**
 * @brief Function implementing the motor0Task thread.
@@ -476,6 +526,8 @@ void StartDefaultTask(void const * argument)
 /* USER CODE END Header_motor0Loop */
 void motor0Loop(void const * argument)
 {
+
+	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_SET);
   /* USER CODE BEGIN motor0Loop */
   /* Infinite loop */
   for(;;)
@@ -539,15 +591,86 @@ void motor1Loop(void const * argument)
 /* USER CODE END Header_ADCLoop */
 void ADCLoop(void const * argument)
 {
-  /* USER CODE BEGIN ADCLoop */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END ADCLoop */
+	volatile uint16_t adcl1 = adc1, adcl2 = adc2, adcl3 = adc3, adcl4 = adc4, adcl5 = adc5;
+
+	while (1)
+	{
+	config(1);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl5 = HAL_ADC_GetValue(&hadc1);
+	adcl5 = adcl5 / 4;
+
+	config(6);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl2 = HAL_ADC_GetValue(&hadc1);
+	adcl2 = adcl2 / 4;
+
+	config(7);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl1 = HAL_ADC_GetValue(&hadc1);
+	adcl1 = adcl1 / 4;
+
+	config(8);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl4 = HAL_ADC_GetValue(&hadc1);
+	adcl4 = adcl4 / 4;
+
+	config(9);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 100000);
+	adcl3 = HAL_ADC_GetValue(&hadc1);
+	adcl3 = adcl3 / 4;
+
+	osDelay(2);
+
+	adc1 = adcl1;
+	adc2 = adcl2;
+	adc3 = adcl3;
+	adc4 = adcl4;
+	adc5 = adcl5;
+
+	osDelay(10);
+	}
 }
 
+void config(int a) {
+ADC_ChannelConfTypeDef sTmp = {0};
+switch(a) {
+case 1:
+sTmp.Channel = ADC_CHANNEL_1;
+break;
+case 6:
+sTmp.Channel = ADC_CHANNEL_6;
+break;
+case 7:
+sTmp.Channel = ADC_CHANNEL_7;
+break;
+case 8:
+sTmp.Channel = ADC_CHANNEL_8;
+break;
+case 9:
+sTmp.Channel = ADC_CHANNEL_9;
+break;
+default:
+sTmp.Channel = ADC_CHANNEL_1;
+}
+sTmp.Rank = ADC_REGULAR_RANK_1;
+sTmp.SingleDiff = ADC_SINGLE_ENDED;
+sTmp.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+sTmp.OffsetNumber = ADC_OFFSET_NONE;
+sTmp.Offset = 0;
+if (HAL_ADC_ConfigChannel(&hadc1, &sTmp) != HAL_OK)
+{
+Error_Handler();
+}
+}
+
+#define CONTROL_HYST			10
+#define STOPPER 			   900
 /* USER CODE BEGIN Header_controlLoop */
 /**
 * @brief Function implementing the controlTask thread.
@@ -557,54 +680,65 @@ void ADCLoop(void const * argument)
 /* USER CODE END Header_controlLoop */
 void controlLoop(void const * argument)
 {
-  /* USER CODE BEGIN controlLoop */
-	/* Infinite loop */
+	  /* USER CODE BEGIN controlLoop */
+		/* Infinite loop */
 
-	m1State = On;
-	m2State = On;
-	m1Speed = 0;
-	m2Speed = 0;
-
-//	goAhead();
-//	osDelay(5000);
-//	turnLeft();
-//	osDelay(3000);
-//	turnRight();
-//	osDelay(3000);
-
-	for(;;)
-	{
-	int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
-
-//	int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
-
-	if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
-		m1State = Off;
-		m2State = Off;
-	}
-	else{
 		m1State = On;
 		m2State = On;
+		m1Speed = 0;
+		m2Speed = 0;
 
-		if (middle - CONTROL_HYST > 2000) {
-			turnLeft();
+		for(;;)
+		{
+		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
 
+	//	int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
+
+		if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
+			m1State = Off;
+			m2State = Off;
 		}
-			else
-				if (middle + CONTROL_HYST < 2000) {
-					turnRight();
+		else{
+			m1State = On;
+			m2State = On;
 
-					}
-					else {
+			if (middle - CONTROL_HYST > 2000) {
+				turnLeft();
 
-						goAhead();
+			}
+				else
+					if (middle + CONTROL_HYST < 2000) {
+						turnRight();
+
 						}
-		osDelay(50);
+						else {
+
+							goAhead();
+							}
+			osDelay(50);
+			}
 		}
-	}
-  /* USER CODE END controlLoop */
+	  /* USER CODE END controlLoop */
 }
 
+void changeSpeed(int leftSpeed, int rightSpeed) {
+if (leftSpeed > m1Speed) m1Speed++;
+else if (leftSpeed < m1Speed) m1Speed--;
+if (rightSpeed > m2Speed) m2Speed++;
+else if (rightSpeed < m2Speed) m2Speed--;
+}
+
+void goAhead() {
+changeSpeed(6,6);
+}
+
+void turnLeft() {
+changeSpeed(0, 6);
+}
+
+void turnRight() {
+changeSpeed(6, 0);
+}
 /* USER CODE BEGIN Header_backupLoop0 */
 /**
 * @brief Function implementing the backupTask0 thread.

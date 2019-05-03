@@ -30,6 +30,8 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_hal.h"
 
+uint16_t adc0,adc1,adc2,adc3,adc4,adc5;
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
