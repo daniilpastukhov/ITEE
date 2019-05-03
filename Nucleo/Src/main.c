@@ -312,7 +312,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 5;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -492,20 +492,24 @@ void StartDefaultTask(void const * argument)
 #define ERROR_LED_PORT	GPIOA
 #define ERROR_LED_PIN	GPIO_PIN_5
 
-#define MAX_SPEED 20
+#define MAX_SPEED 100
 #endif
 
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = Off;
-extern enum State m2State = Off;
+extern enum State m1State = On;
+extern enum State m2State = On;
 
-extern enum Dir m1Dir = Forw;
-extern enum Dir m2Dir = Forw;
+extern enum Dir m1Dir = Backw;
+extern enum Dir m2Dir = Backw;
 
-extern int16_t m1Speed = 4;
-extern int16_t m2Speed = 4;
+extern int16_t m1Speed = 50;
+int16_t lastM1Speed = 0;
+
+extern int16_t m2Speed = 50;
+int16_t lastM2Speed = 0;
+
 extern bool errorMot;
 
 
@@ -515,6 +519,29 @@ extern void setCorrectDirM2(void);
 extern void resetDirM2(void);
 extern void handleSpeedAndDirM1(void);
 extern void handleSpeedAndDirM2(void);
+
+void modifyTimer0PWM(uint16_t value){
+	TIM_OC_InitTypeDef sConfigOC;
+
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = value;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+}
+
+void modifyTimer1PWM(uint16_t value){
+	TIM_OC_InitTypeDef sConfigOC;
+
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = value;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+}
+
 
 
 /* USER CODE BEGIN Header_motor0Loop */
@@ -532,20 +559,21 @@ void motor0Loop(void const * argument)
   /* Infinite loop */
   for(;;)
   {
-
 	  if(m1State == On){
-			if(m1Speed>MAX_SPEED || m1Speed<0){
-				HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
-				errorMot = true;
-			}
-			else{
-				HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_SET);
-				setCorrectDirM1();
-				osDelay(m1Speed);
-				resetDirM1();
-				HAL_GPIO_WritePin(PWMA_PORT,PWMA_PIN,GPIO_PIN_RESET);
-				osDelay(MAX_SPEED-m1Speed);
-			}
+
+		  osDelay(1);
+
+		  if (m1Speed != lastM1Speed){
+
+			  modifyTimer0PWM(m1Speed * 655);
+
+			  lastM1Speed = m1Speed;
+
+		  	  }
+
+		  osDelay(1);
+		  setCorrectDirM1();
+		  osDelay(1);
 	  }
   }
   /* USER CODE END motor0Loop */
@@ -562,23 +590,36 @@ void motor1Loop(void const * argument)
 {
   /* USER CODE BEGIN motor1Loop */
   /* Infinite loop */
+
   for(;;)
   {
 	  if(m2State == On){
-		  if(m2Speed>MAX_SPEED || m2Speed<0){
-			  HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
-			  errorMot = true;
-		  }
-		  else{
-			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_SET);
-			  setCorrectDirM2();
-			  osDelay(m2Speed);
-			  resetDirM2();
-			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_RESET);
-			  osDelay(MAX_SPEED-m2Speed);
-		  }
-	  }
-  }
+
+		  osDelay(1);
+		  if (m2Speed != lastM2Speed){
+			  modifyTimer1PWM(m2Speed * 655);
+			  lastM2Speed = m2Speed;
+		  	  }
+		   osDelay(1);
+		   setCorrectDirM2();
+			osDelay(1);
+	  	  }
+  	  }
+
+//
+//
+//		  if(m2Speed>MAX_SPEED || m2Speed<0){
+//			  HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
+//			  errorMot = true;
+//		  }
+//		  else{
+//			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_SET);
+//			  setCorrectDirM2();
+//			  osDelay(m2Speed);
+//			  resetDirM2();
+//			  HAL_GPIO_WritePin(PWMB_PORT,PWMB_PIN,GPIO_PIN_RESET);
+//			  osDelay(MAX_SPEED-m2Speed);
+//		  }
   /* USER CODE END motor1Loop */
 }
 
@@ -595,6 +636,7 @@ void ADCLoop(void const * argument)
 
 	while (1)
 	{
+
 	config(1);
 	HAL_ADC_Start(&hadc1);
 	HAL_ADC_PollForConversion(&hadc1, 100000);
@@ -680,47 +722,53 @@ Error_Handler();
 /* USER CODE END Header_controlLoop */
 void controlLoop(void const * argument)
 {
-	  /* USER CODE BEGIN controlLoop */
-		/* Infinite loop */
 
 		m1State = On;
 		m2State = On;
 		m1Speed = 0;
 		m2Speed = 0;
 
-		for(;;)
-		{
-		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
+	while(1){
 
-		int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
-
-
-		if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
-			m1State = Off;
-			m2State = Off;
-
-		}
-		else{
-			m1State = On;
-			m2State = On;
-
-			if (middle + CONTROL_HYST > 2000) {
-				turnLeft();
-
-			}
-				else
-					if (middle - CONTROL_HYST < 2000) {
-						turnRight();
-
-						}
-						else {
-
-							goAhead();
-							}
-			osDelay(50);
-			}
-		}
-	  /* USER CODE END controlLoop */
+		osDelay(1);
+	}
+//	  /* USER CODE BEGIN controlLoop */
+//		/* Infinite loop */
+//
+//
+//		for(;;)
+//		{
+//		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
+//
+//		int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
+//
+//
+//		if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
+//			m1State = Off;
+//			m2State = Off;
+//
+//		}
+//		else{
+//			m1State = On;
+//			m2State = On;
+//
+//			if (middle + CONTROL_HYST > 2000) {
+//				turnLeft();
+//
+//			}
+//				else
+//					if (middle - CONTROL_HYST < 2000) {
+//						turnRight();
+//
+//						}
+//						else {
+//
+//							goAhead();
+//							}
+//			osDelay(50);
+//			}
+//		}
+//	  /* USER CODE END controlLoop */
 }
 
 void changeSpeed(int leftSpeed, int rightSpeed) {
