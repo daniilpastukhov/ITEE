@@ -446,8 +446,8 @@ extern enum State m2State = Off;
 extern enum Dir m1Dir = Forw;
 extern enum Dir m2Dir = Forw;
 
-extern int16_t m1Speed = 5;
-extern int16_t m2Speed = 5;
+extern int16_t m1Speed = 4;
+extern int16_t m2Speed = 4;
 extern bool errorMot;
 
 
@@ -475,6 +475,7 @@ void motor0Loop(void const * argument)
   /* Infinite loop */
   for(;;)
   {
+
 	  if(m1State == On){
 			if(m1Speed>MAX_SPEED || m1Speed<0){
 				HAL_GPIO_WritePin(ERROR_LED_PORT,ERROR_LED_PIN,GPIO_PIN_SET);
@@ -618,16 +619,64 @@ Error_Handler();
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
+#define CONTROL_HYST			10
+
 void controlLoop(void const * argument)
 {
-  /* USER CODE BEGIN controlLoop */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END controlLoop */
+	/* USER CODE BEGIN controlLoop */
+	/* Infinite loop */
+
+	m1State = On;
+	m2State = On;
+	m1Speed = 0;
+	m2Speed = 0;
+
+	goAhead();
+	osDelay(5000);
+	turnLeft();
+	osDelay(3000);
+	turnRight();
+	osDelay(3000);
+
+
+	for(;;)
+	{
+	int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
+
+	if (middle + CONTROL_HYST < 2000) {
+		turnLeft();
+		}
+		else
+			if (middle - CONTROL_HYST > 2000) {
+				turnRight();
+				}
+				else {
+					goAhead();
+					}
+	osDelay(140);
+	}
+	/* USER CODE END controlLoop */   /* USER CODE END controlLoop */
 }
+
+void changeSpeed(int leftSpeed, int rightSpeed) {
+if (leftSpeed > m1Speed) m1Speed++;
+else if (leftSpeed < m1Speed) m1Speed--;
+if (rightSpeed > m2Speed) m2Speed++;
+else if (rightSpeed < m2Speed) m2Speed--;
+}
+
+void goAhead() {
+changeSpeed(6,6);
+}
+
+void turnLeft() {
+changeSpeed(4, 6);
+}
+
+void turnRight() {
+changeSpeed(6, 4);
+}
+
 
 /* USER CODE BEGIN Header_backupLoop0 */
 /**
