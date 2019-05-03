@@ -498,8 +498,8 @@ void StartDefaultTask(void const * argument)
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = On;
-extern enum State m2State = On;
+extern enum State m1State = Off;
+extern enum State m2State = Off;
 
 extern enum Dir m1Dir = Forw;
 extern enum Dir m2Dir = Forw;
@@ -669,7 +669,7 @@ Error_Handler();
 }
 }
 
-#define CONTROL_HYST			10
+#define CONTROL_HYST			100
 #define STOPPER 			   900
 /* USER CODE BEGIN Header_controlLoop */
 /**
@@ -692,22 +692,24 @@ void controlLoop(void const * argument)
 		{
 		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
 
-	//	int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
+		int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
+
 
 		if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
 			m1State = Off;
 			m2State = Off;
+
 		}
 		else{
 			m1State = On;
 			m2State = On;
 
-			if (middle - CONTROL_HYST > 2000) {
+			if (middle + CONTROL_HYST > 2000) {
 				turnLeft();
 
 			}
 				else
-					if (middle + CONTROL_HYST < 2000) {
+					if (middle - CONTROL_HYST < 2000) {
 						turnRight();
 
 						}
@@ -729,15 +731,15 @@ else if (rightSpeed < m2Speed) m2Speed--;
 }
 
 void goAhead() {
-changeSpeed(6,6);
+changeSpeed(5,5);
 }
 
 void turnLeft() {
-changeSpeed(0, 6);
+changeSpeed(3, 5);
 }
 
 void turnRight() {
-changeSpeed(6, 0);
+changeSpeed(5, 3);
 }
 /* USER CODE BEGIN Header_backupLoop0 */
 /**
