@@ -498,11 +498,11 @@ void StartDefaultTask(void const * argument)
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = On;
-extern enum State m2State = On;
+extern enum State m1State = Off;
+extern enum State m2State = Off;
 
-extern enum Dir m1Dir = Backw;
-extern enum Dir m2Dir = Backw;
+extern enum Dir m1Dir = Forw;
+extern enum Dir m2Dir = Forw;
 
 extern int16_t m1Speed = 50;
 int16_t lastM1Speed = 0;
@@ -720,55 +720,65 @@ Error_Handler();
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
-void controlLoop(void const * argument)
-{
+const int max = 40;
+int last_proportional;
+int integral;
+float kP = 25;
+float kI = 0.15;
+float kD = 1200;
 
-		m1State = On;
-		m2State = On;
-		m1Speed = 0;
-		m2Speed = 0;
+void controlLoop(void const *argument) {
+/* USER CODE BEGIN controlLoop */
+/* Infinite loop */
 
-	while(1){
+	m1State = On;
+	m2State = On;
+	m1Speed = 0;
+	m2Speed = 0;
 
-		osDelay(1);
+	for (;;) {
+		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
+		int proportional = middle - 2000;
+
+		int derivative = proportional - last_proportional;
+		integral += proportional;
+
+		last_proportional = proportional;
+
+		int power_difference = proportional * kP + integral * kI + derivative * kD;
+
+		if(power_difference > max)
+			power_difference = max;
+		if(power_difference < -max)
+			power_difference = -max;
+
+		if(power_difference < 0) {
+			m2Speed = max + power_difference;
+			m1Speed = max;
+		} else {
+			m2Speed = max;
+			m1Speed = max - power_difference;
+		}
+
+			osDelay(10);
+// if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
+// m1State = Off;
+// m2State = Off;
+// } else {
+// m1State = On;
+// m2State = On;
+//
+// if (middle - CONTROL_HYST > 2000) {
+// turnLeft();
+// } else if (middle + CONTROL_HYST < 2000) {
+// turnRight();
+// } else {
+// goAhead();
+// }
+// osDelay(50);
+// }
 	}
-//	  /* USER CODE BEGIN controlLoop */
-//		/* Infinite loop */
-//
-//
-//		for(;;)
-//		{
-//		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
-//
-//		int data= (adc1 + adc2 + adc3 + adc4 + adc5) / 5;
-//
-//
-//		if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
-//			m1State = Off;
-//			m2State = Off;
-//
-//		}
-//		else{
-//			m1State = On;
-//			m2State = On;
-//
-//			if (middle + CONTROL_HYST > 2000) {
-//				turnLeft();
-//
-//			}
-//				else
-//					if (middle - CONTROL_HYST < 2000) {
-//						turnRight();
-//
-//						}
-//						else {
-//
-//							goAhead();
-//							}
-//			osDelay(50);
-//			}
-//		}
-//	  /* USER CODE END controlLoop */
+/* USER CODE END controlLoop */
 }
 
 void changeSpeed(int leftSpeed, int rightSpeed) {

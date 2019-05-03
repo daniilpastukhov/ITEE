@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
+  <component name="CMakeSettings">
+    <configurations>
+      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
+    </configurations>
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="12bb9f59-952b-48c4-87ce-0a56b0d73a8d" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.settings/language.settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.settings/language.settings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_flash_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_gpio.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_pwr_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_rcc_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart_ex.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart_ex.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/croutine.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/croutine.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/event_groups.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/event_groups.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/list.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/list.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/queue.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/queue.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/tasks.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/tasks.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/timers.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Middlewares/Third_Party/FreeRTOS/Source/timers.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Nucleo.elf" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Nucleo.elf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Nucleo.list" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Nucleo.list" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Nucleo.map" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Nucleo.map" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/freertos.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/freertos.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/main.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/main.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/motors.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/motors.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/stm32f3xx_hal_msp.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/stm32f3xx_hal_msp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/stm32f3xx_hal_timebase_tim.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/stm32f3xx_hal_timebase_tim.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/stm32f3xx_it.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/stm32f3xx_it.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/syscalls.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/syscalls.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/Src/system_stm32f3xx.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/Src/system_stm32f3xx.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Debug/startup/startup_stm32f303xe.o" beforeDir="false" afterPath="$PROJECT_DIR$/Debug/startup/startup_stm32f303xe.o" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Src/main.c">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="255">
+              <caret line="17" column="4" lean-forward="true" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectConfigurationFiles">
+    <option name="files">
+      <list>
+        <option value="$PROJECT_DIR$/.idea/Nucleo.iml" />
+        <option value="$PROJECT_DIR$/.idea/misc.xml" />
+        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
+        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="100" />
+    <option name="y" value="47" />
+    <option name="width" value="1400" />
+    <option name="height" value="786" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Nucleo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Nucleo" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Nucleo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Nucleo" type="462c0819:PsiDirectoryNode" />
+              <item name="Src" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="12bb9f59-952b-48c4-87ce-0a56b0d73a8d" name="Default Changelist" comment="" />
+      <created>1556892373838</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1556892373838</updated>
+      <workItem from="1556892375016" duration="382000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="382000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="100" y="47" width="1400" height="786" extended-state="0" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Favorites" side_tool="true" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24963072" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="Database Changes" />
+      <window_info anchor="bottom" id="Version Control" />
+      <window_info anchor="bottom" id="Terminal" />
+      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="right" id="Database" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/Src/main.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" column="4" lean-forward="true" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
