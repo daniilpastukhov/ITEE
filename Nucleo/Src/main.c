@@ -565,7 +565,7 @@ void motor0Loop(void const * argument)
 
 		  if (m1Speed != lastM1Speed){
 
-			  modifyTimer0PWM(m1Speed * 655);
+			  modifyTimer0PWM(m1Speed * 65);
 
 			  lastM1Speed = m1Speed;
 
@@ -597,7 +597,7 @@ void motor1Loop(void const * argument)
 
 		  osDelay(1);
 		  if (m2Speed != lastM2Speed){
-			  modifyTimer1PWM(m2Speed * 655);
+			  modifyTimer1PWM(m2Speed * 65);
 			  lastM2Speed = m2Speed;
 		  	  }
 		   osDelay(1);
@@ -720,12 +720,12 @@ Error_Handler();
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
-const int max = 40;
+const int max = 600;
 int last_proportional;
 int integral;
-float kP = 25;
-float kI = 0.15;
-float kD = 1200;
+float kP = 1.65;
+float kI = 0.0007;
+float kD = 0.025;
 
 void controlLoop(void const *argument) {
 /* USER CODE BEGIN controlLoop */
