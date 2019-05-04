@@ -276,6 +276,7 @@ static void MX_TIM2_Init(void)
   }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
@@ -711,6 +712,49 @@ const int maxDistance = 150;
 unsigned long long int moveTime;
 unsigned long long int distance;
 
+void MakeStepForw(void){
+	m1Speed = 500;
+	m2Speed = 500;
+	m1Dir = Forw;
+	m2Dir = Forw;
+	m1State = On;
+	m2State = On;
+}
+
+void MakeStepBackw(void){
+	m1Speed = 500;
+	m2Speed = 535;
+	m1Dir = Backw;
+	m2Dir = Backw;
+	m1State = On;
+	m2State = On;
+}
+
+void stopMot(void){
+	m1State = Off;
+	m2State = Off;
+	}
+void make720(void){
+	m1Speed = 1000;
+	m2Speed = 1000;
+	m1Dir = Forw;
+	m2Dir = Backw;
+	m1State = On;
+	m2State = On;
+	}
+
+void turnABit(void){
+	m1Speed = 500;
+	m2Speed = 500;
+	m1Dir = Forw;
+	m2Dir = Backw;
+	m1State = On;
+	m2State = On;
+	}
+
+#define TRACKSIZE  400
+#define FILTER		 2
+
 void controlLoop(void const * argument)
 
 {
@@ -718,24 +762,44 @@ void controlLoop(void const * argument)
 	m1State = Off;
 	m2State = Off;
 //	distance = pulseDuration * 100 / 17150;;
-
+	uint16_t i = 0;
+	uint16_t stepCounter = 0;
+	uint16_t filterCounter = 0;
 	  for(;;) {
-//		  distance = pulseDuration * 100 / 17150;
-		  if(pulseDuration > 40000) {
-			  goAhead();
-			  osDelay(2);
-		  } else if(pulseDuration > 10000) {
-			  makeTurnRight();
-			  osDelay(2);
-		  } else if(pulseDuration > 200 && pulseDuration <= 10000) {
-			  goAhead();
-			  osDelay(2);
-		  } else {
-			  m1State = Off;
-			  m2State = Off;
-		  }
+		  for(i = 0;i <TRACKSIZE;i++){
+			  MakeStepForw();
+			  osDelay(1);
+			  stopMot();
+			  stepCounter++;
+			  if(pulseDuration < 900){
+				  filterCounter++;
+			  	  }
+			  if (filterCounter == FILTER){
+				  make720();
+				  osDelay(2823);
+				  stopMot();
+				  filterCounter = 0;
+				  break;
+			  	  }
 
-		  osDelay(10);
+			  	  }
+		  osDelay(100);
+
+		  filterCounter = 0;
+
+		  osDelay(100);
+		  for(i = 0;i <stepCounter;i++){
+
+			  	  MakeStepBackw();
+			  	  osDelay(1);
+			  	  stopMot();
+			  	  }
+		  stepCounter = 0;
+		  osDelay(5);
+		  turnABit();
+		  osDelay(150);
+	  	  stopMot();
+		  }
 	  }
 //		  while (distance > maxDistance) {
 //			  makeTurnRight();
@@ -762,7 +826,6 @@ void controlLoop(void const * argument)
 //		  }
 //
 //		  makeTurnRight();
-}
 
 unsigned long long int getDistance() {
 	return pulseDuration * 100 / 17150;
