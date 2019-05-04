@@ -78,8 +78,6 @@ void Error_Handler(void);
 #define Pulse_GPIO_Port GPIOC
 #define ENCO1In_Pin GPIO_PIN_9
 #define ENCO1In_GPIO_Port GPIOC
-#define ENCO0In_Pin GPIO_PIN_8
-#define ENCO0In_GPIO_Port GPIOA
 #define Motor0Low_Pin GPIO_PIN_11
 #define Motor0Low_GPIO_Port GPIOA
 #define Motor1Low_Pin GPIO_PIN_12
