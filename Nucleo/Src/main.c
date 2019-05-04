@@ -499,8 +499,8 @@ void modifyTimer3PWM(uint16_t value){
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = On;
-extern enum State m2State = On;
+extern enum State m1State = Off;
+extern enum State m2State = Off;
 
 extern enum Dir m1Dir = Forw;
 extern enum Dir m2Dir = Forw;
@@ -614,16 +614,34 @@ void controlLoop(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_VzdLoop */
+void sendPulse(void){
+  	TIM17->CNT = 0;
+   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+	HAL_TIM_Base_Start(&htim17);
+	while((TIM17->CNT<50));
+  	HAL_TIM_Base_Stop(&htim17);
+   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+  	TIM17->CNT = 0;
+	}
+// && ((TIM17->CNT)<9000)
+uint32_t pulseDuration = 0;
+
 void VzdLoop(void const * argument)
 {
   /* USER CODE BEGIN VzdLoop */
   /* Infinite loop */
   for(;;)
   {
+	  sendPulse();
+  	  TIM17->CNT = 0;
+  	  while(!HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_6)); //wait for pulse
+	  HAL_TIM_Base_Start(&htim17);
+  	  while(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_6)); //wait for pulse
+  	  HAL_TIM_Base_Stop(&htim17);
+  	  pulseDuration = TIM17->CNT;
 
-//  HAL_TIM_Base_Start(&htim17);
-//  osDelay(1);
-//  HAL_TIM_Base_Stop(&htim17);
+  	  TIM17->CNT = 0;
+	  osDelay(1);
 //  uint16_t elTime = __HAL_TIM_GetCounter(&htim17);
   }
   /* USER CODE END VzdLoop */
