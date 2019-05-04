@@ -41,9 +41,4 @@ int16_t m1Speed;
 int16_t m2Speed;
 bool errorMot = false;
 
-void setCorrectDirM1(void);
-void resetDirM1(void);
-void setCorrectDirM2(void);
-void resetDirM2(void);
-
 #endif

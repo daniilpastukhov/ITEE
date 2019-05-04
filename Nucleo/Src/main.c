@@ -21,8 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include "stdbool.h"
-
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -45,19 +43,18 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim17;
 
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
 osThreadId motor0TaskHandle;
 osThreadId motor1TaskHandle;
-osThreadId ADCTaskHandle;
 osThreadId controlTaskHandle;
-osThreadId backupTask0Handle;
+osThreadId VzdTaskHandle;
 osThreadId backupTask1Handle;
+osThreadId EncoTaskHandle;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -66,15 +63,15 @@ osThreadId backupTask1Handle;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM17_Init(void);
 void StartDefaultTask(void const * argument);
 void motor0Loop(void const * argument);
 void motor1Loop(void const * argument);
-void ADCLoop(void const * argument);
 void controlLoop(void const * argument);
-void backupLoop0(void const * argument);
+void VzdLoop(void const * argument);
 void backupLoop1(void const * argument);
+void EncoLoop(void const * argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -114,8 +111,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_ADC1_Init();
   MX_TIM3_Init();
+  MX_TIM17_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -149,21 +146,21 @@ int main(void)
   osThreadDef(motor1Task, motor1Loop, osPriorityIdle, 0, 128);
   motor1TaskHandle = osThreadCreate(osThread(motor1Task), NULL);
 
-  /* definition and creation of ADCTask */
-  osThreadDef(ADCTask, ADCLoop, osPriorityIdle, 0, 128);
-  ADCTaskHandle = osThreadCreate(osThread(ADCTask), NULL);
-
   /* definition and creation of controlTask */
   osThreadDef(controlTask, controlLoop, osPriorityIdle, 0, 128);
   controlTaskHandle = osThreadCreate(osThread(controlTask), NULL);
 
-  /* definition and creation of backupTask0 */
-  osThreadDef(backupTask0, backupLoop0, osPriorityIdle, 0, 128);
-  backupTask0Handle = osThreadCreate(osThread(backupTask0), NULL);
+  /* definition and creation of VzdTask */
+  osThreadDef(VzdTask, VzdLoop, osPriorityIdle, 0, 128);
+  VzdTaskHandle = osThreadCreate(osThread(VzdTask), NULL);
 
   /* definition and creation of backupTask1 */
   osThreadDef(backupTask1, backupLoop1, osPriorityIdle, 0, 128);
   backupTask1Handle = osThreadCreate(osThread(backupTask1), NULL);
+
+  /* definition and creation of EncoTask */
+  osThreadDef(EncoTask, EncoLoop, osPriorityIdle, 0, 128);
+  EncoTaskHandle = osThreadCreate(osThread(EncoTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -221,76 +218,15 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_TIM34;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_TIM17
+                              |RCC_PERIPHCLK_TIM34;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Tim17ClockSelection = RCC_TIM17CLK_HCLK;
   PeriphClkInit.Tim34ClockSelection = RCC_TIM34CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_MultiModeTypeDef multimode = {0};
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-
-  /* USER CODE END ADC1_Init 1 */
-  /** Common config 
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure the ADC multi-mode 
-  */
-  multimode.Mode = ADC_MODE_INDEPENDENT;
-  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Regular Channel 
-  */
-  sConfig.Channel = ADC_CHANNEL_14;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -312,7 +248,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 5;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -343,6 +279,38 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 2 */
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 72;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 65535;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
 
 }
 
@@ -397,11 +365,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, LD2_Pin|AIN1_Pin|AIN2_Pin|PWMB_Pin 
-                          |BN1_Pin|BN2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin|Motor0Low_Pin|Motor1Low_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, backupOut1_Pin|backupOut0_Pin|PWMA_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, backupOut1_Pin|Pulse_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -422,23 +389,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(backupIn1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : backupIn0_Pin */
-  GPIO_InitStruct.Pin = backupIn0_Pin;
+  /*Configure GPIO pins : EchoIn_Pin ENCO1In_Pin */
+  GPIO_InitStruct.Pin = EchoIn_Pin|ENCO1In_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(backupIn0_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : backupOut1_Pin backupOut0_Pin PWMA_Pin */
-  GPIO_InitStruct.Pin = backupOut1_Pin|backupOut0_Pin|PWMA_Pin;
+  /*Configure GPIO pins : backupOut1_Pin Pulse_Pin */
+  GPIO_InitStruct.Pin = backupOut1_Pin|Pulse_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : AIN1_Pin AIN2_Pin PWMB_Pin BN1_Pin 
-                           BN2_Pin */
-  GPIO_InitStruct.Pin = AIN1_Pin|AIN2_Pin|PWMB_Pin|BN1_Pin 
-                          |BN2_Pin;
+  /*Configure GPIO pin : ENCO0In_Pin */
+  GPIO_InitStruct.Pin = ENCO0In_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(ENCO0In_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Motor0Low_Pin Motor1Low_Pin */
+  GPIO_InitStruct.Pin = Motor0Low_Pin|Motor1Low_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -469,56 +440,6 @@ void StartDefaultTask(void const * argument)
   /* USER CODE END 5 */ 
 }
 
-#ifndef __MOTOR_PINS
-#define __MOTOR_PINS
-#define AIN1_PORT	GPIOA
-#define AIN1_PIN	GPIO_PIN_8
-
-#define AIN2_PORT	GPIOA
-#define AIN2_PIN	GPIO_PIN_9
-
-#define PWMA_PORT	GPIOC
-#define PWMA_PIN	GPIO_PIN_9
-
-#define BIN1_PORT	GPIOA
-#define BIN1_PIN	GPIO_PIN_11
-
-#define BIN2_PORT	GPIOA
-#define BIN2_PIN	GPIO_PIN_12
-
-#define PWMB_PORT	GPIOA
-#define PWMB_PIN	GPIO_PIN_10
-
-#define ERROR_LED_PORT	GPIOA
-#define ERROR_LED_PIN	GPIO_PIN_5
-
-#define MAX_SPEED 100
-#endif
-
-extern enum State{On,Off};
-extern enum Dir{Forw,Backw};
-
-extern enum State m1State = Off;
-extern enum State m2State = Off;
-
-extern enum Dir m1Dir = Forw;
-extern enum Dir m2Dir = Forw;
-
-extern int16_t m1Speed = 50;
-int16_t lastM1Speed = 0;
-
-extern int16_t m2Speed = 50;
-int16_t lastM2Speed = 0;
-
-extern bool errorMot;
-
-
-extern void setCorrectDirM1(void);
-extern void resetDirM1(void);
-extern void setCorrectDirM2(void);
-extern void resetDirM2(void);
-extern void handleSpeedAndDirM1(void);
-extern void handleSpeedAndDirM2(void);
 
 void modifyTimer0PWM(uint16_t value){
 	TIM_OC_InitTypeDef sConfigOC;
@@ -542,7 +463,49 @@ void modifyTimer1PWM(uint16_t value){
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 }
 
+extern enum State{On,Off};
+extern enum Dir{Forw,Backw};
 
+extern enum State m1State = Off;
+extern enum State m2State = Off;
+
+extern int16_t m1Speed = 50;
+int16_t lastM1Speed = 0;
+
+extern int16_t m2Speed = 50;
+int16_t lastM2Speed = 0;
+
+#define PWMA_PORT	GPIOA
+#define PWMA_PIN	GPIO_PIN_4
+
+#define PWMB_PORT GPIOA
+#define PWMB_PIN	GPIO_PIN_6
+
+#define PWMALOW_PORT	GPIOA
+#define PWMALOW_PIN	GPIO_PIN_11
+
+#define PWMBLOW_PORT	GPIOA
+#define PWMBLOW_PIN	GPIO_PIN_12
+
+#define ENCO0_PORT	GPIOA
+#define ENCO0_PIN		GPIO_PIN_8
+
+#define ENCO1_PORT	GPIOC
+#define ENCO1_PIN 	GPIO_PIN_9
+
+#define PULSE_PORT	GPIOC
+#define PULSE_PIN 	GPIO_PIN_8
+
+#define ECHO_PORT		GPIOC
+#define ECHO_PIN 		GPIO_PIN_6
+
+void setDirM1(void){
+	HAL_GPIO_WritePin(PWMALOW_PORT,PWMALOW_PIN,GPIO_PIN_SET);
+	}
+
+void resetDirM1(void){
+	HAL_GPIO_WritePin(PWMALOW_PORT,PWMALOW_PIN,GPIO_PIN_RESET);
+	}
 
 /* USER CODE BEGIN Header_motor0Loop */
 /**
@@ -553,14 +516,13 @@ void modifyTimer1PWM(uint16_t value){
 /* USER CODE END Header_motor0Loop */
 void motor0Loop(void const * argument)
 {
-
-	HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,GPIO_PIN_SET);
   /* USER CODE BEGIN motor0Loop */
   /* Infinite loop */
+
   for(;;)
   {
 	  if(m1State == On){
-
+		  setDirM1();
 		  osDelay(1);
 
 		  if (m1Speed != lastM1Speed){
@@ -570,13 +532,21 @@ void motor0Loop(void const * argument)
 			  lastM1Speed = m1Speed;
 
 		  	  }
-
-		  osDelay(1);
-		  setCorrectDirM1();
-		  osDelay(1);
 	  }
+	  else{
+		  resetDirM1();
+	  	  }
+	  osDelay(1);
   }
   /* USER CODE END motor0Loop */
+}
+
+void setDirM2(void){
+	HAL_GPIO_WritePin(PWMBLOW_PORT,PWMBLOW_PIN,GPIO_PIN_SET);
+}
+
+void resetDirM2(void){
+	HAL_GPIO_WritePin(PWMBLOW_PORT,PWMBLOW_PIN,GPIO_PIN_RESET);
 }
 
 /* USER CODE BEGIN Header_motor1Loop */
@@ -594,16 +564,17 @@ void motor1Loop(void const * argument)
   for(;;)
   {
 	  if(m2State == On){
-
+		  setDirM2();
 		  osDelay(1);
 		  if (m2Speed != lastM2Speed){
 			  modifyTimer1PWM(m2Speed * 65);
 			  lastM2Speed = m2Speed;
 		  	  }
-		   osDelay(1);
-		   setCorrectDirM2();
-			osDelay(1);
 	  	  }
+	  else{
+		  resetDirM2();
+	  	  }
+	  osDelay(1);
   	  }
 
 //
@@ -623,96 +594,6 @@ void motor1Loop(void const * argument)
   /* USER CODE END motor1Loop */
 }
 
-/* USER CODE BEGIN Header_ADCLoop */
-/**
-* @brief Function implementing the ADCTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_ADCLoop */
-void ADCLoop(void const * argument)
-{
-	volatile uint16_t adcl1 = adc1, adcl2 = adc2, adcl3 = adc3, adcl4 = adc4, adcl5 = adc5;
-
-	while (1)
-	{
-
-	config(1);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl5 = HAL_ADC_GetValue(&hadc1);
-	adcl5 = adcl5 / 4;
-
-	config(6);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl2 = HAL_ADC_GetValue(&hadc1);
-	adcl2 = adcl2 / 4;
-
-	config(7);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl1 = HAL_ADC_GetValue(&hadc1);
-	adcl1 = adcl1 / 4;
-
-	config(8);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl4 = HAL_ADC_GetValue(&hadc1);
-	adcl4 = adcl4 / 4;
-
-	config(9);
-	HAL_ADC_Start(&hadc1);
-	HAL_ADC_PollForConversion(&hadc1, 100000);
-	adcl3 = HAL_ADC_GetValue(&hadc1);
-	adcl3 = adcl3 / 4;
-
-	osDelay(2);
-
-	adc1 = adcl1;
-	adc2 = adcl2;
-	adc3 = adcl3;
-	adc4 = adcl4;
-	adc5 = adcl5;
-
-	osDelay(10);
-	}
-}
-
-void config(int a) {
-ADC_ChannelConfTypeDef sTmp = {0};
-switch(a) {
-case 1:
-sTmp.Channel = ADC_CHANNEL_1;
-break;
-case 6:
-sTmp.Channel = ADC_CHANNEL_6;
-break;
-case 7:
-sTmp.Channel = ADC_CHANNEL_7;
-break;
-case 8:
-sTmp.Channel = ADC_CHANNEL_8;
-break;
-case 9:
-sTmp.Channel = ADC_CHANNEL_9;
-break;
-default:
-sTmp.Channel = ADC_CHANNEL_1;
-}
-sTmp.Rank = ADC_REGULAR_RANK_1;
-sTmp.SingleDiff = ADC_SINGLE_ENDED;
-sTmp.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-sTmp.OffsetNumber = ADC_OFFSET_NONE;
-sTmp.Offset = 0;
-if (HAL_ADC_ConfigChannel(&hadc1, &sTmp) != HAL_OK)
-{
-Error_Handler();
-}
-}
-
-#define CONTROL_HYST			100
-#define STOPPER 			   900
 /* USER CODE BEGIN Header_controlLoop */
 /**
 * @brief Function implementing the controlTask thread.
@@ -720,101 +601,35 @@ Error_Handler();
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
-const int max = 600;
-int last_proportional;
-int integral;
-float kP = 1.65;
-float kI = 0.0007;
-float kD = 0.025;
-
-void controlLoop(void const *argument) {
-/* USER CODE BEGIN controlLoop */
-/* Infinite loop */
-
-	m1State = On;
-	m2State = On;
-	m1Speed = 0;
-	m2Speed = 0;
-
-	for (;;) {
-		int middle = (0 * adc1 + 1000 * adc2 + 2000 * adc3 + 3000 * adc4 + 4000 * adc5) / (adc1 + adc2 + adc3 + adc4 + adc5);
-		int proportional = middle - 2000;
-
-		int derivative = proportional - last_proportional;
-		integral += proportional;
-
-		last_proportional = proportional;
-
-		int power_difference = proportional * kP + integral * kI + derivative * kD;
-
-		if(power_difference > max)
-			power_difference = max;
-		if(power_difference < -max)
-			power_difference = -max;
-
-		if(power_difference < 0) {
-			m2Speed = max + power_difference;
-			m1Speed = max;
-		} else {
-			m2Speed = max;
-			m1Speed = max - power_difference;
-		}
-
-			osDelay(10);
-// if ((adc1 + adc2 + adc3 + adc4 + adc5) / 5 >= STOPPER) {
-// m1State = Off;
-// m2State = Off;
-// } else {
-// m1State = On;
-// m2State = On;
-//
-// if (middle - CONTROL_HYST > 2000) {
-// turnLeft();
-// } else if (middle + CONTROL_HYST < 2000) {
-// turnRight();
-// } else {
-// goAhead();
-// }
-// osDelay(50);
-// }
-	}
-/* USER CODE END controlLoop */
+void controlLoop(void const * argument)
+{
+	  for(;;)
+	  {
+	    osDelay(1);
+	  }
+	  /* USER CODE END VzdLoop */
 }
 
-void changeSpeed(int leftSpeed, int rightSpeed) {
-if (leftSpeed > m1Speed) m1Speed++;
-else if (leftSpeed < m1Speed) m1Speed--;
-if (rightSpeed > m2Speed) m2Speed++;
-else if (rightSpeed < m2Speed) m2Speed--;
-}
-
-void goAhead() {
-changeSpeed(5,5);
-}
-
-void turnLeft() {
-changeSpeed(3, 5);
-}
-
-void turnRight() {
-changeSpeed(5, 3);
-}
-/* USER CODE BEGIN Header_backupLoop0 */
+/* USER CODE BEGIN Header_VzdLoop */
 /**
-* @brief Function implementing the backupTask0 thread.
+* @brief Function implementing the VzdTask thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_backupLoop0 */
-void backupLoop0(void const * argument)
+/* USER CODE END Header_VzdLoop */
+void VzdLoop(void const * argument)
 {
-  /* USER CODE BEGIN backupLoop0 */
+  /* USER CODE BEGIN VzdLoop */
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+
+  HAL_TIM_Base_Start(&htim17);
+  osDelay(1);
+  HAL_TIM_Base_Stop(&htim17);
+  uint16_t elTime = __HAL_TIM_GetCounter(&htim17);
   }
-  /* USER CODE END backupLoop0 */
+  /* USER CODE END VzdLoop */
 }
 
 /* USER CODE BEGIN Header_backupLoop1 */
@@ -833,6 +648,24 @@ void backupLoop1(void const * argument)
     osDelay(1);
   }
   /* USER CODE END backupLoop1 */
+}
+
+/* USER CODE BEGIN Header_EncoLoop */
+/**
+* @brief Function implementing the EncoTask thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_EncoLoop */
+void EncoLoop(void const * argument)
+{
+  /* USER CODE BEGIN EncoLoop */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END EncoLoop */
 }
 
 /**

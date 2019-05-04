@@ -30,8 +30,6 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f3xx_hal.h"
 
-uint16_t adc0,adc1,adc2,adc3,adc4,adc5;
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -72,24 +70,20 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOA
 #define backupIn1_Pin GPIO_PIN_15
 #define backupIn1_GPIO_Port GPIOB
-#define backupIn0_Pin GPIO_PIN_6
-#define backupIn0_GPIO_Port GPIOC
+#define EchoIn_Pin GPIO_PIN_6
+#define EchoIn_GPIO_Port GPIOC
 #define backupOut1_Pin GPIO_PIN_7
 #define backupOut1_GPIO_Port GPIOC
-#define backupOut0_Pin GPIO_PIN_8
-#define backupOut0_GPIO_Port GPIOC
-#define PWMA_Pin GPIO_PIN_9
-#define PWMA_GPIO_Port GPIOC
-#define AIN1_Pin GPIO_PIN_8
-#define AIN1_GPIO_Port GPIOA
-#define AIN2_Pin GPIO_PIN_9
-#define AIN2_GPIO_Port GPIOA
-#define PWMB_Pin GPIO_PIN_10
-#define PWMB_GPIO_Port GPIOA
-#define BN1_Pin GPIO_PIN_11
-#define BN1_GPIO_Port GPIOA
-#define BN2_Pin GPIO_PIN_12
-#define BN2_GPIO_Port GPIOA
+#define Pulse_Pin GPIO_PIN_8
+#define Pulse_GPIO_Port GPIOC
+#define ENCO1In_Pin GPIO_PIN_9
+#define ENCO1In_GPIO_Port GPIOC
+#define ENCO0In_Pin GPIO_PIN_8
+#define ENCO0In_GPIO_Port GPIOA
+#define Motor0Low_Pin GPIO_PIN_11
+#define Motor0Low_GPIO_Port GPIOA
+#define Motor1Low_Pin GPIO_PIN_12
+#define Motor1Low_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
