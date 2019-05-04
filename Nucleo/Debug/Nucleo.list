@@ -13444,6 +13444,7 @@ void EncoLoop(void const * argument)
  8005244:	6a5b      	ldr	r3, [r3, #36]	; 0x24
  8005246:	4a05      	ldr	r2, [pc, #20]	; (800525c <EncoLoop+0x2c>)
  8005248:	6013      	str	r3, [r2, #0]
+
     osDelay(1);
  800524a:	2001      	movs	r0, #1
  800524c:	f7fe fa3e 	bl	80036cc <osDelay>

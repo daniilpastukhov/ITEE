@@ -788,6 +788,7 @@ void EncoLoop(void const * argument)
 
 
 	  encVal1 = TIM4->CNT;
+
     osDelay(1);
   }
   /* USER CODE END EncoLoop */
