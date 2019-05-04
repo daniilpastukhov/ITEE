@@ -24,7 +24,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+unsigned long long int getDistance();
+unsigned long long int measureObjectSize();
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -604,10 +605,10 @@ extern enum State m2State = Off;
 extern enum Dir m1Dir = Forw;
 extern enum Dir m2Dir = Forw;
 
-extern int16_t m1Speed = 300;
+extern int16_t m1Speed = 400;
 int16_t lastM1Speed = 0;
 
-extern int16_t m2Speed = 300;
+extern int16_t m2Speed = 400;
 int16_t lastM2Speed = 0;
 
 /* USER CODE BEGIN Header_motor0Loop */
@@ -638,6 +639,9 @@ void motor0Loop(void const * argument)
 			  lastM1Speed = m1Speed;
 			  modifyTimer0PWM(0);
 			}
+	  } else {
+		  modifyTimer1PWM(0);
+		  modifyTimer0PWM(0);
 	  }
 	  osDelay(1);
   }
@@ -670,6 +674,9 @@ void motor1Loop(void const * argument)
 			  lastM2Speed = m2Speed;
 			  modifyTimer2PWM(0);
 			}
+	  } else {
+		  modifyTimer3PWM(0);
+		  modifyTimer2PWM(0);
 	  }
 	  osDelay(1);
   }
@@ -698,18 +705,113 @@ void motor1Loop(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
+unsigned volatile long long int pulseDuration = 0;
+const int bottleSize = 15;
+const int maxDistance = 150;
+unsigned long long int moveTime;
+unsigned long long int distance;
+
 void controlLoop(void const * argument)
+
 {
-  /* USER CODE BEGIN controlLoop */
-  /* Infinite loop */
-  for(;;)
-  {
-	  m1State = On;
-    osDelay(1);
-  }
-  /* USER CODE END controlLoop */
+	osDelay(100);
+	m1State = Off;
+	m2State = Off;
+//	distance = pulseDuration * 100 / 17150;;
+
+	  for(;;) {
+//		  distance = pulseDuration * 100 / 17150;
+		  if(pulseDuration > 40000) {
+			  goAhead();
+			  osDelay(2);
+		  } else if(pulseDuration > 10000) {
+			  makeTurnRight();
+			  osDelay(2);
+		  } else if(pulseDuration > 200 && pulseDuration <= 10000) {
+			  goAhead();
+			  osDelay(2);
+		  } else {
+			  m1State = Off;
+			  m2State = Off;
+		  }
+
+		  osDelay(10);
+	  }
+//		  while (distance > maxDistance) {
+//			  makeTurnRight();
+//			  distance = pulseDuration * 100 / 17150;;
+//			  osDelay(5);
+//
+//		  }
+//
+//		  while (distance < 100) {
+//			  goAhead();
+//			  distance = pulseDuration * 100 / 17150;;
+//			  osDelay(5);
+//
+//		  }
+//
+//		  unsigned long long int size = measureObjectSize();
+//
+//		  if (size < bottleSize + 10) {
+//			  makeDoubleTurn();
+//		  } else {
+//			  while (moveTime > 0) {
+//				  goBack();
+//			  }
+//		  }
+//
+//		  makeTurnRight();
 }
 
+unsigned long long int getDistance() {
+	return pulseDuration * 100 / 17150;
+}
+
+void goAhead() {
+	m1State = On;
+	m2State = On;
+	m1Dir = Forw;
+	m2Dir = Forw;
+	m1Speed = 400;
+	m2Speed = 400;
+	moveTime++;
+}
+
+void goBack() {
+	m1State = On;
+	m2State = On;
+	m1Dir = Backw;
+	m1Speed = 400;
+	m2Dir = Backw;
+	m2Speed = 400;
+	moveTime--;
+}
+
+void makeTurnRight() {
+	m1State = On;
+	m2State = On;
+	m1Dir = Backw;
+	m1Speed = 400;
+	m2Dir = Forw;
+	m2Speed = 400;
+}
+
+unsigned long long int measureObjectSize() {
+	unsigned long long int time = 0;
+	unsigned long long int distance = pulseDuration * 100 / 17150;;
+	while (distance < maxDistance) {
+		makeTurnRight();
+		distance = pulseDuration * 100 / 17150;;
+		time++;
+	}
+
+	return time;
+}
+
+void makeDoubleTurn() {
+	int counter = 0;
+}
 /* USER CODE BEGIN Header_VzdLoop */
 /**
 * @brief Function implementing the VzdTask thread.
@@ -727,7 +829,6 @@ void sendPulse(void){
   	TIM17->CNT = 0;
 	}
 // && ((TIM17->CNT)<9000)
-uint32_t pulseDuration = 0;
 
 void VzdLoop(void const * argument)
 {
