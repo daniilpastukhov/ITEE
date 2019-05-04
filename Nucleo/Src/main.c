@@ -60,6 +60,10 @@ osThreadId EncoTaskHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
+unsigned long long int measureObjectSize();
+unsigned long long int getDistance();
+
+
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
@@ -525,6 +529,7 @@ void motor0Loop(void const * argument)
 
   for(;;)
   {
+
 	  if(m1State == On){
 			if(m1Dir == Forw){
 			  modifyTimer0PWM(m1Speed * 65);
@@ -557,6 +562,7 @@ void motor1Loop(void const * argument)
 
   for(;;)
   {
+
 	  if(m2State == On){
 			if(m2Dir == Forw){
 			  modifyTimer2PWM(m2Speed * 65);
@@ -596,17 +602,91 @@ void motor1Loop(void const * argument)
 * @retval None
 */
 /* USER CODE END Header_controlLoop */
+unsigned long long int pulseDuration = 0;
+const int bottleSize = 150;
+const int maxDistance = 1500;
+unsigned long long int moveTime;
+unsigned long long int distance;
+
 void controlLoop(void const * argument)
 {
-  /* USER CODE BEGIN controlLoop */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END controlLoop */
+	m1State = On;
+	m2State = On;
+	  for(;;)
+	  {
+		  distance = getDistance();
+
+		  while (distance > maxDistance) {
+			  makeTurnRight();
+		  }
+
+		  while (distance > 12) {
+			  goAhead();
+		  }
+
+		  unsigned long long int size = measureObjectSize();
+
+		  if (size < bottleSize + 10) {
+			  makeDoubleTurn();
+		  } else {
+			  while (moveTime > 0) {
+				  goBack();
+			  }
+		  }
+
+		  makeTurnRight();
+
+		  osDelay(10);
+	  }
 }
 
+unsigned long long int getDistance() {
+
+	return pulseDuration * 100 / 17150;
+}
+
+void goAhead() {
+	m1Dir = Forw;
+	m2Dir = Forw;
+	m1Speed = 400;
+	m2Speed = 400;
+	moveTime++;
+}
+
+void goBack() {
+	m1Dir = Backw;
+	m1Speed = 400;
+	m2Dir = Backw;
+	m2Speed = 400;
+	moveTime--;
+}
+
+void makeTurnRight() {
+	distance = getDistance();
+	m1Dir = Backw;
+	m1Speed = 400;
+	m2Dir = Forw;
+	m2Speed = 400;
+}
+
+unsigned long long int measureObjectSize() {
+	unsigned long long int time = 0;
+	unsigned long long int distance = getDistance();
+	while (distance < maxDistance) {
+		makeTurnRight();
+		distance = getDistance();
+		time++;
+	}
+
+	return time;
+}
+
+void makeDoubleTurn() {
+	int counter = 0;
+
+
+
+}
 /* USER CODE BEGIN Header_VzdLoop */
 /**
 * @brief Function implementing the VzdTask thread.
@@ -624,7 +704,7 @@ void sendPulse(void){
   	TIM17->CNT = 0;
 	}
 // && ((TIM17->CNT)<9000)
-uint32_t pulseDuration = 0;
+
 
 void VzdLoop(void const * argument)
 {
