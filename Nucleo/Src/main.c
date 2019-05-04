@@ -275,6 +275,14 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
@@ -441,6 +449,7 @@ void StartDefaultTask(void const * argument)
 }
 
 
+
 void modifyTimer0PWM(uint16_t value){
 	TIM_OC_InitTypeDef sConfigOC;
 
@@ -463,49 +472,44 @@ void modifyTimer1PWM(uint16_t value){
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
 }
 
+void modifyTimer2PWM(uint16_t value){
+	TIM_OC_InitTypeDef sConfigOC;
+
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = value;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+}
+
+void modifyTimer3PWM(uint16_t value){
+	TIM_OC_InitTypeDef sConfigOC;
+
+	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+	sConfigOC.Pulse = value;
+	sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+	sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+	HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+}
+
+
+
 extern enum State{On,Off};
 extern enum Dir{Forw,Backw};
 
-extern enum State m1State = Off;
-extern enum State m2State = Off;
+extern enum State m1State = On;
+extern enum State m2State = On;
 
-extern int16_t m1Speed = 50;
+extern enum Dir m1Dir = Forw;
+extern enum Dir m2Dir = Forw;
+
+extern int16_t m1Speed = 300;
 int16_t lastM1Speed = 0;
 
-extern int16_t m2Speed = 50;
+extern int16_t m2Speed = 300;
 int16_t lastM2Speed = 0;
-
-#define PWMA_PORT	GPIOA
-#define PWMA_PIN	GPIO_PIN_4
-
-#define PWMB_PORT GPIOA
-#define PWMB_PIN	GPIO_PIN_6
-
-#define PWMALOW_PORT	GPIOA
-#define PWMALOW_PIN	GPIO_PIN_11
-
-#define PWMBLOW_PORT	GPIOA
-#define PWMBLOW_PIN	GPIO_PIN_12
-
-#define ENCO0_PORT	GPIOA
-#define ENCO0_PIN		GPIO_PIN_8
-
-#define ENCO1_PORT	GPIOC
-#define ENCO1_PIN 	GPIO_PIN_9
-
-#define PULSE_PORT	GPIOC
-#define PULSE_PIN 	GPIO_PIN_8
-
-#define ECHO_PORT		GPIOC
-#define ECHO_PIN 		GPIO_PIN_6
-
-void setDirM1(void){
-	HAL_GPIO_WritePin(PWMALOW_PORT,PWMALOW_PIN,GPIO_PIN_SET);
-	}
-
-void resetDirM1(void){
-	HAL_GPIO_WritePin(PWMALOW_PORT,PWMALOW_PIN,GPIO_PIN_RESET);
-	}
 
 /* USER CODE BEGIN Header_motor0Loop */
 /**
@@ -522,31 +526,20 @@ void motor0Loop(void const * argument)
   for(;;)
   {
 	  if(m1State == On){
-		  setDirM1();
-		  osDelay(1);
-
-		  if (m1Speed != lastM1Speed){
-
+			if(m1Dir == Forw){
 			  modifyTimer0PWM(m1Speed * 65);
-
 			  lastM1Speed = m1Speed;
-
-		  	  }
+			  modifyTimer1PWM(0);
+			}
+			else{
+			  modifyTimer1PWM(m1Speed * 65);
+			  lastM1Speed = m1Speed;
+			  modifyTimer0PWM(0);
+			}
 	  }
-	  else{
-		  resetDirM1();
-	  	  }
 	  osDelay(1);
   }
   /* USER CODE END motor0Loop */
-}
-
-void setDirM2(void){
-	HAL_GPIO_WritePin(PWMBLOW_PORT,PWMBLOW_PIN,GPIO_PIN_SET);
-}
-
-void resetDirM2(void){
-	HAL_GPIO_WritePin(PWMBLOW_PORT,PWMBLOW_PIN,GPIO_PIN_RESET);
 }
 
 /* USER CODE BEGIN Header_motor1Loop */
@@ -561,21 +554,24 @@ void motor1Loop(void const * argument)
   /* USER CODE BEGIN motor1Loop */
   /* Infinite loop */
 
+
   for(;;)
   {
 	  if(m2State == On){
-		  setDirM2();
-		  osDelay(1);
-		  if (m2Speed != lastM2Speed){
-			  modifyTimer1PWM(m2Speed * 65);
+			if(m2Dir == Forw){
+			  modifyTimer2PWM(m2Speed * 65);
 			  lastM2Speed = m2Speed;
-		  	  }
-	  	  }
-	  else{
-		  resetDirM2();
-	  	  }
+			  modifyTimer3PWM(0);
+			}
+			else{
+			  modifyTimer3PWM(m2Speed * 65);
+			  lastM2Speed = m2Speed;
+			  modifyTimer2PWM(0);
+			}
+	  }
 	  osDelay(1);
-  	  }
+  }
+}
 
 //
 //
@@ -592,7 +588,6 @@ void motor1Loop(void const * argument)
 //			  osDelay(MAX_SPEED-m2Speed);
 //		  }
   /* USER CODE END motor1Loop */
-}
 
 /* USER CODE BEGIN Header_controlLoop */
 /**
@@ -603,11 +598,13 @@ void motor1Loop(void const * argument)
 /* USER CODE END Header_controlLoop */
 void controlLoop(void const * argument)
 {
-	  for(;;)
-	  {
-	    osDelay(1);
-	  }
-	  /* USER CODE END VzdLoop */
+  /* USER CODE BEGIN controlLoop */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END controlLoop */
 }
 
 /* USER CODE BEGIN Header_VzdLoop */
@@ -624,10 +621,10 @@ void VzdLoop(void const * argument)
   for(;;)
   {
 
-  HAL_TIM_Base_Start(&htim17);
-  osDelay(1);
-  HAL_TIM_Base_Stop(&htim17);
-  uint16_t elTime = __HAL_TIM_GetCounter(&htim17);
+//  HAL_TIM_Base_Start(&htim17);
+//  osDelay(1);
+//  HAL_TIM_Base_Stop(&htim17);
+//  uint16_t elTime = __HAL_TIM_GetCounter(&htim17);
   }
   /* USER CODE END VzdLoop */
 }
